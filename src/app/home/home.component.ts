@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { Room, RoomService } from '../shared/services/room.service';
 import { map } from 'rxjs';
+import { SharedModule } from '../shared/shared.module';
+import { SpinnerService } from '../shared/spinner/spinner.service';
 
 const defaultRoom: Room = {
   name: "",
@@ -14,7 +16,7 @@ const defaultRoom: Room = {
   selector: 'app-home',
   standalone: true,
   imports: [
-    CommonModule,
+    CommonModule, SharedModule
   ],
   templateUrl: 'home.component.html',
   styleUrl: './home.component.scss',
@@ -24,17 +26,11 @@ export class HomeComponent {
 
   private router: Router = inject(Router);
   private roomService: RoomService = inject(RoomService);
+  private _spinnerService: SpinnerService = inject(SpinnerService);
 
-  navigateToRoom(roomCode: string) {
-    if (roomCode) {
-      this.router.navigate(['/room', roomCode, 'poker'])
-    }
-  }
-
-  async createRoomDefault() {
-    await this.roomService.createRoom(defaultRoom).pipe(map(room => {
-      this.router.navigate(['/room', room.id, 'poker'])
-    })).toPromise();
+  createRoomDefault() {
+    this._spinnerService.showSpinner();
+    this.roomService.createRoomDefault().subscribe().add(this._spinnerService.hideSpinner());
   }
 
 }

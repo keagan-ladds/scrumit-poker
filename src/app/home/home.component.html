@@ -25,14 +25,9 @@
               <p class="lead  text-white">Join or create rooms in seconds for collaborative agile planning. No account required for seamless participation.</p>
               <div class="btn-wrapper">
                 
-                <a>
-                  <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Room Code" #roomCode>
-                    <div class="input-group-append">
-                      <button class="btn btn-white" type="button" (click)="navigateToRoom(roomCode.value)">Join Room</button>
-                    </div>
-                  </div>
-                </a>
+                <div class="mb-3">
+                  <app-join-room></app-join-room>
+                </div>
                 <button  class="btn btn-primary btn-icon mb-3" (click)="createRoomDefault()">
                   <span class="btn-inner--icon"><i class="fa fa-code"></i></span>
                   <span class="btn-inner--text">Create Room</span>

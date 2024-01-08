@@ -8,12 +8,14 @@ import { updateDoc } from 'firebase/firestore';
 import { Observable, from, map, of, switchMap, throwError } from 'rxjs';
 import { RoomParticipant, RoomService } from '../shared/services/room.service';
 import { AuthService } from '../shared/services/auth.service';
+import { AdsenseModule } from 'ng2-adsense';
+import { SpinnerService } from '../shared/spinner/spinner.service';
 
 @Component({
   selector: 'app-room',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, ReactiveFormsModule
+    CommonModule, FormsModule, ReactiveFormsModule, AdsenseModule
   ],
   templateUrl: './room.component.html',
   styleUrl: './room.component.scss',
@@ -43,6 +45,8 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
   private formBuilder: FormBuilder = inject(FormBuilder);
   private roomService: RoomService = inject(RoomService);
   private authService: AuthService = inject(AuthService);
+  private spinnerService: SpinnerService = inject(SpinnerService);
+
   private isBrowser: boolean = false;
   private selectedCard: any;
 
@@ -68,6 +72,8 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
 
     this.participants$ = this.roomService.roomParticipants$;
     this.roomDetails$ = this.roomService.room$;
+
+    this.spinnerService.showSpinner();
   }
 
   async ngOnDestroy() {
@@ -84,7 +90,7 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
       return;
     }
 
-    this.signIn().pipe(map(participant => from(this.joinRoom(participant)))).subscribe();
+    this.signIn().pipe(map(participant => from(this.joinRoom(participant)))).subscribe().add(this.spinnerService.hideSpinner());
   }
 
   isSelected(value: string): boolean {

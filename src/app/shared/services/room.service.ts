@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
-import { Firestore, collection, collectionData, deleteDoc, doc, docData, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
+import { DocumentData, Firestore, collection, collectionData, deleteDoc, doc, docData, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, from, map, mergeMap, pipe, switchMap, tap } from 'rxjs';
 
@@ -13,7 +13,7 @@ export class RoomService {
   private auth: Auth = inject(Auth);
   private router: Router = inject(Router);
 
-  private room: BehaviorSubject<Room> = new BehaviorSubject<Room>({name: '', hidden: true});
+  private room: BehaviorSubject<Room> = new BehaviorSubject<Room>({ name: '', hidden: true });
   private roomParticipants: BehaviorSubject<RoomParticipant[]> = new BehaviorSubject<RoomParticipant[]>([]);
 
   get room$() {
@@ -25,6 +25,7 @@ export class RoomService {
   }
 
   roomExists(id: any): Observable<boolean> {
+    console.log('Room Exists?')
     const roomRef = doc(this.firestore, `/rooms/${id}`);
     return from(getDoc(roomRef)).pipe(map(room => room.exists()));
   }
@@ -40,7 +41,7 @@ export class RoomService {
   getRoomParticipants(id: any): Observable<RoomParticipant[]> {
     console.log("Getting room participants");
     const roomParticipantsRef = collection(this.firestore, `/rooms/${id}/participants`);
-    return (collectionData(roomParticipantsRef, {idField: 'id'}) as Observable<RoomParticipant[]>).pipe(map(participants => {
+    return (collectionData(roomParticipantsRef, { idField: 'id' }) as Observable<RoomParticipant[]>).pipe(map(participants => {
       this.roomParticipants.next(participants);
       return participants;
     }));
@@ -71,10 +72,22 @@ export class RoomService {
     }));
   }
 
-  async createRoomDefault() {
-    await this.createRoom(defaultRoom).pipe(map(room => {
+  createRoomDefault(): Observable<void> {
+    return this.createRoom(defaultRoom).pipe(map(room => {
       this.router.navigate(['/room', room.id, 'poker'])
-    })).toPromise();
+    }))
+  }
+
+  navigateToRoom(roomCode: string, errorCallback?: (error: string) => void): Observable<void> {
+    return this.roomExists(roomCode).pipe(map(exists => {
+      if (exists) {
+        this.router.navigate(['/room', roomCode, 'poker'])
+      } else {
+        if (errorCallback) {
+          errorCallback("The room does not exist");
+        }
+      }
+    }));
   }
 
   // leaveRoom() {
@@ -101,6 +114,6 @@ export interface RoomParticipant {
 
 const defaultRoom: Room = {
   name: "",
-  options: "?,0,1,2,3,5,8,13",
+  options: "?,0,0.5,1,2,3,5,8,13,20,40,100",
   hidden: true
 };

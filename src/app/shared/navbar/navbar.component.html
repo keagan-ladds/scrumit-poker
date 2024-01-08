@@ -40,12 +40,7 @@
           </a>
         </li>
         <li class="nav-item d-none d-lg-block ml-lg-4">
-          <div class="input-group">
-            <input type="text" class="form-control" placeholder="Room Code" #roomCode>
-            <div class="input-group-append">
-              <button class="btn btn-white" type="button" (click)="navigateToRoom(roomCode.value)">Join Room</button>
-            </div>
-          </div>
+          <app-join-room></app-join-room>
         </li>
       </ul>
     </div>

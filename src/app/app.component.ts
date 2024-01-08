@@ -5,6 +5,7 @@ import { SharedModule } from './shared/shared.module';
 import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+
 const projectConfig = {
 
 };
@@ -12,7 +13,7 @@ const projectConfig = {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SharedModule, NgbModalModule],
+  imports: [CommonModule, RouterOutlet, SharedModule, NgbModalModule,  ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

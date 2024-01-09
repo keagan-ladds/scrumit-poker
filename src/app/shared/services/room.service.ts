@@ -25,7 +25,6 @@ export class RoomService {
   }
 
   roomExists(id: any): Observable<boolean> {
-    console.log('Room Exists?')
     const roomRef = doc(this.firestore, `/rooms/${id}`);
     return from(getDoc(roomRef)).pipe(map(room => room.exists()));
   }
@@ -39,7 +38,6 @@ export class RoomService {
   }
 
   getRoomParticipants(id: any): Observable<RoomParticipant[]> {
-    console.log("Getting room participants");
     const roomParticipantsRef = collection(this.firestore, `/rooms/${id}/participants`);
     return (collectionData(roomParticipantsRef, { idField: 'id' }) as Observable<RoomParticipant[]>).pipe(map(participants => {
       this.roomParticipants.next(participants);

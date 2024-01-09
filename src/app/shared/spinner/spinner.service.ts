@@ -11,12 +11,10 @@ export class SpinnerService {
   constructor() { }
 
   showSpinner() {
-    console.log('Show spinner')
     this.spinner$.next(true);
   }
 
   hideSpinner() {
-    console.log('Hide spinner')
     this.spinner$.next(false);
   }
 

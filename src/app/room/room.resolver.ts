@@ -10,7 +10,6 @@ export const roomResolver: ResolveFn<boolean> = (route, state) => {
 
   spinnerService.showSpinner();
   return authService.signIn().pipe(map(user => {
-    console.log('Signing in');
     spinnerService.hideSpinner();
     return true;
   }))

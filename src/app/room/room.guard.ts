@@ -11,10 +11,8 @@ export const roomGuard: CanActivateFn = (route, state) => {
   const roomId = route.paramMap.get('roomId');
   return roomService.roomExists(roomId).pipe(map(exists => {
     if (!exists) {
-      console.log('Does not exist')
       router.navigate(['/']);
     }
-    console.log('Exists')
     return exists;
   }))
 };

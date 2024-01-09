@@ -121,8 +121,6 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
     };
 
     if (!participant.name && this.auth.currentUser) {
-
-      console.log('Requesting user name')
       const modalRef = this.modalService.open(this.modalContent, modalOptions);
       await modalRef.result;
 
@@ -133,7 +131,6 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
 
     this.participantId = participant.id;
     const participantName = participant.name;
-    console.log('Joining room as: ', participantName)
     this.roomService.joinRoom(this.roomId, this.participantId, participantName ?? '').subscribe();
   }
 

@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth } from '@angular/fire/auth';
-import { DocumentData, Firestore, collection, collectionData, deleteDoc, doc, docData, getDoc, setDoc, updateDoc } from '@angular/fire/firestore';
+import { DocumentData, Firestore, collection, collectionData, deleteDoc, doc, docData, getDoc, getDocs, setDoc, updateDoc, writeBatch } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, from, map, mergeMap, pipe, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, Observable, combineAll, combineLatest, combineLatestAll, combineLatestWith, forkJoin, from, map, mergeMap, pipe, switchMap, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -10,56 +10,64 @@ import { BehaviorSubject, Observable, from, map, mergeMap, pipe, switchMap, tap 
 export class RoomService {
 
   private firestore: Firestore = inject(Firestore);
-  private auth: Auth = inject(Auth);
   private router: Router = inject(Router);
 
-  private room: BehaviorSubject<Room> = new BehaviorSubject<Room>({ name: '', hidden: true });
-  private roomParticipants: BehaviorSubject<RoomParticipant[]> = new BehaviorSubject<RoomParticipant[]>([]);
-
-  get room$() {
-    return this.room.asObservable();
-  }
-
-  get roomParticipants$() {
-    return this.roomParticipants.asObservable();
-  }
 
   roomExists(id: any): Observable<boolean> {
     const roomRef = doc(this.firestore, `/rooms/${id}`);
     return from(getDoc(roomRef)).pipe(map(room => room.exists()));
   }
 
-  getRoomById(id: any): Observable<Room> {
-    const roomRef = doc(this.firestore, `/rooms/${id}`);
-    return (docData(roomRef, { idField: 'id' }) as Observable<Room>).pipe(switchMap(room => this.getRoomParticipants(id).pipe(map(() => {
-      this.room.next(room);
-      return room;
-    }))));
+
+  private addParticipantToRoom(roomId: any, participant: { id: any, name: string }): Observable<any> {
+    const participantRef = doc(this.firestore, `/rooms/${roomId}/participants/${participant.id}`);
+    return from(getDoc(participantRef)).pipe(mergeMap(existingParticipant => {
+      if (existingParticipant.exists()) {
+        return updateDoc(participantRef, {
+          name: participant.name
+        });
+      } else {
+        return setDoc(participantRef, {
+          name: participant.name
+        });
+      }
+    }))
   }
 
-  getRoomParticipants(id: any): Observable<RoomParticipant[]> {
-    const roomParticipantsRef = collection(this.firestore, `/rooms/${id}/participants`);
-    return (collectionData(roomParticipantsRef, { idField: 'id' }) as Observable<RoomParticipant[]>).pipe(map(participants => {
-      this.roomParticipants.next(participants);
-      return participants;
-    }));
+  joinRoomV2(roomId: any, participant: { id: any, name: string }): Observable<Room> {
+    const roomRef = doc(this.firestore, `/rooms/${roomId}`);
+    const roomParticipantsRef = collection(this.firestore, `/rooms/${roomId}/participants`);
+
+    const room$ = docData(roomRef, { idField: 'id' }) as Observable<Room>;
+    const participant$ = collectionData(roomParticipantsRef, { idField: 'id' }) as Observable<RoomParticipant[]>;
+
+    return this.addParticipantToRoom(roomId, participant).pipe(mergeMap(() => {
+      return combineLatest([room$, participant$]).pipe(map(([room, participants]) => {
+        room.participants = participants;
+        return room;
+      }))
+    }))
   }
 
-  joinRoom(roomId: any, participantId: any, participantName: string): Observable<Room> {
+  updateVote(roomId: any, participantId: any,  score: string | null) {
     const currentParticipantRef = doc(this.firestore, `/rooms/${roomId}/participants/${participantId}`);
-
-    return from(getDoc(currentParticipantRef)).pipe(mergeMap((participant => {
-      const action = participant.exists() ? updateDoc(currentParticipantRef, {
-        name: participantName
-      }) : setDoc(currentParticipantRef, {
-        name: participantName
-      });
-
-      return from(action).pipe(mergeMap(() => {
-        return this.getRoomById(roomId);
-      }));
-    })));
+    updateDoc(currentParticipantRef, { score: score })
   }
+
+  toggleHiddenScores(roomId: any, hidden: boolean) {
+    const roomRef = doc(this.firestore, `/rooms/${roomId}`);
+    updateDoc(roomRef, { hidden: hidden });
+  }
+
+  resetScores(roomId: any) {
+    const roomParticipantsRef = collection(this.firestore, `/rooms/${roomId}/participants`);
+    getDocs(roomParticipantsRef).then(records => {
+      const batch = writeBatch(this.firestore);
+      records.forEach(record => batch.update(record.ref, { score: null }));
+      batch.commit();
+    });
+  }
+
 
   createRoom(room: Room): Observable<Room> {
     const collectionRef = collection(this.firestore, `/rooms`);
@@ -101,7 +109,8 @@ export interface Room {
   id?: string;
   name: string;
   options?: string;
-  hidden: boolean
+  hidden: boolean;
+  participants?: RoomParticipant[];
 }
 
 export interface RoomParticipant {

@@ -5,6 +5,7 @@ import { Room, RoomService } from '../shared/services/room.service';
 import { map } from 'rxjs';
 import { SharedModule } from '../shared/shared.module';
 import { SpinnerService } from '../shared/spinner/spinner.service';
+import { AnalyticsService, EventTypes } from '../shared/services/analytics.service';
 
 const defaultRoom: Room = {
   name: "",
@@ -27,10 +28,12 @@ export class HomeComponent {
   private router: Router = inject(Router);
   private roomService: RoomService = inject(RoomService);
   private _spinnerService: SpinnerService = inject(SpinnerService);
+  private _analyticsService: AnalyticsService = inject(AnalyticsService);
 
   createRoomDefault() {
     this._spinnerService.showSpinner();
     this.roomService.createRoomDefault().subscribe().add(this._spinnerService.hideSpinner());
+    this._analyticsService.logEvent(EventTypes.CreateRoom);
   }
 
 }

@@ -31,9 +31,10 @@
                         </div>
                     </div>
                     <div class="card-container mb-4">
-                        
+
                         @for (card of cards; track $index) {
-                        <button class="card card-poker" [ngClass]="{'card-poker-selected': isSelected(card.value)}" (click)="updateVote(card.value)">
+                        <button class="card card-poker" [ngClass]="{'card-poker-selected': isSelected(card.value)}"
+                            (click)="updateVote(card.value)">
                             <div class="top">
                                 <img src="assets/img/brand/favicon.svg">
                                 <img src="assets/img/brand/favicon.svg">
@@ -49,13 +50,14 @@
                         }
 
                     </div>
-                    <div class="btn-wrapper mb-4">
-                        <button type="button" class="btn btn-primary"(click)="resetScores()">Reset Scores</button>
-                        <button type="button" class="btn btn-white" (click)="toggleHiddenScores()">{{ scoresHidden ? 'Show' : 'Hide'}}</button>
+                    <div class="btn-wrapper mb-4 row ml-0 mr-0">
+                        <button type="button" class="btn btn-primary" (click)="resetScores()">Reset Scores</button>
+                        <button type="button" class="btn btn-white ml-auto" (click)="toggleHiddenScores()">{{ scoresHidden ?
+                            'Show' : 'Hide'}}</button>
                     </div>
 
                     <div>
-                        <table class="table table-striped ">
+                        <table class="table">
                             <thead>
                                 <tr>
                                     <th scope="col">Name</th>
@@ -63,12 +65,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr *ngFor="let participant of participants$ | async">
+                                <tr *ngFor="let participant of (roomDetails$ | async)?.participants">
                                     <td class="align-middle">{{participant.name}}</td>
                                     @if (scoresHidden){
-                                    <td><div class="card-poker-mini"><img src="assets/img/brand/favicon.svg"></div></td>
+                                    <td>
+                                        <div class="card-poker-mini" [ngClass]="{'card-poker-mini-active': participant.score}"></div>
+                                    </td>
                                     } @else {
-                                    <td><div class="card-poker-mini"><span>{{participant.score ?? '-'}}</span></div></td>
+                                    <td>
+                                        <div class="card-poker-mini"><span>{{participant.score ?? '-'}}</span></div>
+                                    </td>
                                     }
 
                                 </tr>
@@ -76,36 +82,37 @@
                         </table>
                     </div>
                 </div>
-                <ng-adsense [height]="108" [fullWidthResponsive]="true"></ng-adsense>
+                <!-- <ng-adsense [height]="108" [fullWidthResponsive]="true"></ng-adsense> -->
             </div>
         </div>
     </section>
 
     <ng-template #content let-c="close" let-d="dismiss">
         <div class="modal-content">
-          <div class="modal-header">
-            <h6 class="modal-title" id="modal-title-default">Type your modal title</h6>
-          </div>
-          <div class="modal-body">
-            <div class=" px-lg-5 py-lg-5">
-                <div class="text-muted mb-4">
-                  <small>Please enter you name</small>
-                </div>
-                <form role="form" [formGroup]="formGroup">
-                  <div class="form-group mb-3">
-                    <div class="input-group input-group-alternative">
-                      <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="ni ni-email-83"></i></span>
-                      </div>
-                      <input class="form-control" placeholder="Name" type="text" formControlName="name">
+            <div class="modal-header">
+                <h6 class="modal-title" id="modal-title-default"></h6>
+            </div>
+            <div class="modal-body">
+                <div class=" px-lg-5 py-lg-5">
+                    <div class="text-muted mb-4">
+                        <small>Please enter you name</small>
                     </div>
-                  </div>
-                </form>
-              </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" [disabled]="!formGroup.valid" (click)="c()">Save changes</button>
-          </div>
+                    <form role="form" [formGroup]="formGroup">
+                        <div class="form-group mb-3">
+                            <div class="input-group input-group-alternative">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="ni ni-email-83"></i></span>
+                                </div>
+                                <input class="form-control" placeholder="Name" type="text" formControlName="name">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" [disabled]="!formGroup.valid" (click)="c()">Save
+                    changes</button>
+            </div>
         </div>
-      </ng-template>
+    </ng-template>
 </main>

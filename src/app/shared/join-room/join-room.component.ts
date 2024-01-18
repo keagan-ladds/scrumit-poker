@@ -4,6 +4,7 @@ import { SpinnerService } from '../spinner/spinner.service';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { AlertService } from '../alert/alert.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { AnalyticsService, EventTypes } from '../services/analytics.service';
 
 @Component({
   selector: 'app-join-room',
@@ -17,6 +18,7 @@ export class JoinRoomComponent {
   private _changeDetectorRef: ChangeDetectorRef = inject(ChangeDetectorRef);
   private _formBuilder: FormBuilder = inject(FormBuilder);
   private _alertService: AlertService = inject(AlertService);
+  private _analyticsService: AnalyticsService = inject(AnalyticsService);
 
   private modalService: NgbModal = inject(NgbModal);
 
@@ -36,6 +38,7 @@ export class JoinRoomComponent {
   hasError: boolean = false
 
   navigateToRoom(roomCode: string) {
+    this._analyticsService.logEvent(EventTypes.JoinRoom);
     if (roomCode) {
       this._spinnerService.showSpinner();
       this.roomService.navigateToRoom(roomCode, error => {

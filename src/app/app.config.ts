@@ -14,9 +14,10 @@ export const appConfig: ApplicationConfig = {
   providers: [provideRouter(routes, withComponentInputBinding()), provideClientHydration(),
   importProvidersFrom(provideFirebaseApp(() => initializeApp(projectConfig))),
   importProvidersFrom(provideFirestore(() => getFirestore())),
-  importProvidersFrom(provideAuth(() => getAuth())), 
-  importProvidersFrom(AdsenseModule.forRoot({
-    adClient: 'ca-pub-3275937606976700',
-    adSlot: 1129777470,
-  }))]
+  importProvidersFrom(provideAuth(() => getAuth())),
+    // importProvidersFrom(AdsenseModule.forRoot({
+    //   adClient: 'ca-pub-3275937606976700',
+    //   adSlot: 1129777470,
+    // }))
+  ]
 };

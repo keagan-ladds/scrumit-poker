@@ -6,7 +6,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { NgbModal, NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
 import { updateDoc } from 'firebase/firestore';
 import { Observable, from, map, of, switchMap, throwError } from 'rxjs';
-import { RoomParticipant, RoomService } from '../shared/services/room.service';
+import { Room, RoomParticipant, RoomService } from '../shared/services/room.service';
 import { AuthService } from '../shared/services/auth.service';
 import { AdsenseModule } from 'ng2-adsense';
 import { SpinnerService } from '../shared/spinner/spinner.service';
@@ -29,7 +29,7 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
 
   roomDetails$: Observable<Room> = new Observable();
   participants$: Observable<RoomParticipant[]> = new Observable();
-  currentParticipant$: Observable<Participant> = new Observable();
+  currentParticipant$: Observable<RoomParticipant> = new Observable();
 
   scoresHidden: boolean = true;
 
@@ -57,22 +57,7 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
       name: ['', [Validators.required]]
     });
   }
-  ngOnInit(): void {
-    this.roomService.room$.subscribe(details => {
-      this.scoresHidden = details?.hidden ?? true
-      this.cards = this.buildCardsFromOptionString(details?.options ?? '');
-    });
-
-    this.roomService.roomParticipants$.subscribe(participants => {
-      const currentParticipant = participants.find(participant => participant.id == this.participantId);
-      if (currentParticipant) {
-        this.selectedCard = currentParticipant.score;
-      }
-    });
-
-    this.participants$ = this.roomService.roomParticipants$;
-    this.roomDetails$ = this.roomService.room$;
-
+  ngOnInit(): void {  
     this.spinnerService.showSpinner();
   }
 
@@ -91,6 +76,15 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     this.signIn().pipe(map(participant => from(this.joinRoom(participant)))).subscribe().add(this.spinnerService.hideSpinner());
+
+    this.roomDetails$.subscribe(details => {
+      this.scoresHidden = details?.hidden ?? true
+      this.cards = this.buildCardsFromOptionString(details?.options ?? '');
+      const currentParticipant = details.participants?.find(participant => participant.id == this.participantId);
+      if (currentParticipant) {
+        this.selectedCard = currentParticipant.score;
+      }
+    });
   }
 
   isSelected(value: string): boolean {
@@ -131,7 +125,8 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
 
     this.participantId = participant.id;
     const participantName = participant.name;
-    this.roomService.joinRoom(this.roomId, this.participantId, participantName ?? '').subscribe();
+    this.roomDetails$ = this.roomService.joinRoomV2(this.roomId, {id: this.participantId, name: participantName ?? ''});
+    
   }
 
   private async leaveRoom() {
@@ -140,22 +135,15 @@ export class RoomComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   updateVote(score: string | null) {
-    const currentParticipantRef = doc(this.firestore, `/rooms/${this.roomId}/participants/${this.participantId}`);
-    updateDoc(currentParticipantRef, { score: score })
+    this.roomService.updateVote(this.roomId, this.participantId, score);
   }
 
   toggleHiddenScores() {
-    const roomRef = doc(this.firestore, `/rooms/${this.roomId}`);
-    updateDoc(roomRef, { hidden: !this.scoresHidden });
+    this.roomService.toggleHiddenScores(this.roomId, !this.scoresHidden);
   }
 
   resetScores() {
-    const roomParticipantsRef = collection(this.firestore, `/rooms/${this.roomId}/participants`);
-    getDocs(roomParticipantsRef).then(records => {
-      const batch = writeBatch(this.firestore);
-      records.forEach(record => batch.update(record.ref, { score: null }));
-      batch.commit();
-    });
+    this.roomService.resetScores(this.roomId);
   }
 
   private buildCardsFromOptionString(optionString: string): PokerCard[] {
@@ -177,15 +165,3 @@ export interface PokerCard {
   value: string;
 }
 
-export interface Room {
-  id?: string;
-  name: string;
-  options?: string;
-  hidden: boolean
-}
-
-export interface Participant {
-  id?: any;
-  name: string;
-  score?: string | null;
-}

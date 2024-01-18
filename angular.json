@@ -33,6 +33,11 @@
               "src/styles.scss",
               "src/assets/scss/argon.scss"
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "src"
+              ]
+            },
             "scripts": [],
             "server": "src/main.server.ts",
             "prerender": true,
